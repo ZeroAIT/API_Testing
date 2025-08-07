@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Sentinel</title>
+<style>
+:root {
+    --bg-color: #f4f7fc;
+    --card-bg: #ffffff;
+    --primary-color: #0d6efd; /* Blue */
+    --secondary-color: #6c757d;
+    --success-color: #198754; /* Green */
+    --fail-color: #dc3545; /* Red */
+    --text-color: #212529;
+    --text-on-primary: #ffffff;
+    --border-color: #dee2e6;
+    --font-family: Calibri, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --tab-mandatory-color: #fd7e14; /* Orange */
+    --tab-datatype-color: #198754; /* Green */
+    --tab-boundary-color: #6f42c1; /* Purple */
+    --tab-lov-color: #0dcaf0; /* Teal */
+    --tab-health-color: #0d6efd; /* Blue */
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 24px; }
+.container { max-width: 1200px; margin: auto; }
+h1, h2, h3 { color: #000033; font-weight: bold; }
+h1 { text-align: center; margin-bottom: 20px; font-size: 2.8em; }
+h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
+.card { background-color: var(--card-bg); border-radius: 12px; padding: 30px; margin-bottom: 24px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+.form-group { margin-bottom: 20px; }
+label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
+input[type="text"], input[type="search"], textarea, select {
+    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
+    background-color: #fff; color: var(--text-color); font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, input[type="search"]:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+/* --- MODIFIED BUTTON STYLES --- */
+button {
+    background-color: #ffffff; /* White background */
+    color: var(--primary-color); /* Blue text */
+    padding: 12px 25px;
+    border: 1px solid var(--primary-color); /* Blue border */
+    border-radius: 8px;
+    cursor: pointer; font-size: 16px; font-weight: bold;
+    transition: all 0.2s ease-in-out; white-space: nowrap;
+}
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background-color: var(--primary-color); /* Blue background on hover */
+    color: var(--text-on-primary); /* White text on hover */
+    filter: brightness(1.1);
+}
+button:disabled {
+    background-color: #e9ecef; color: #adb5bd; border-color: #dee2e6;
+    cursor: not-allowed; transform: none; filter: none;
+}
+.btn-secondary {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+.btn-secondary:hover:not(:disabled) { background-color: var(--secondary-color); color: white; }
+.btn-danger {
+    color: var(--fail-color);
+    border-color: var(--fail-color);
+}
+.btn-danger:hover:not(:disabled) { background-color: var(--fail-color); color: white; }
+
+
+/* --- NEW API TABS --- */
+.api-tabs { display: flex; margin-bottom: -1px; }
+.api-tab-btn {
+    padding: 12px 25px; font-size: 1.2em; font-weight: bold;
+    border: 1px solid var(--border-color); border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer; background-color: #e9ecef; color: var(--secondary-color);
+    position: relative; top: 1px;
+}
+.api-tab-btn.active { background-color: var(--card-bg); border-bottom: 1px solid var(--card-bg); color: var(--primary-color); }
+.api-tab-content { display: none; }
+.api-tab-content.active { display: block; }
+
+.tab-bar { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; position: relative; }
+#tab-slider { position: absolute; bottom: -2px; height: 3px; background-color: var(--primary-color); transition: left 0.3s ease-out, width 0.3s ease-out, background-color 0.3s; border-radius: 2px; }
+#tab-slider[data-color="mandatory"] { background-color: var(--tab-mandatory-color); }
+#tab-slider[data-color="datatype"] { background-color: var(--tab-datatype-color); }
+#tab-slider[data-color="boundary"] { background-color: var(--tab-boundary-color); }
+#tab-slider[data-color="lov"] { background-color: var(--tab-lov-color); }
+#tab-slider[data-color="health"] { background-color: var(--tab-health-color); }
+
+.tab-button {
+    padding: 15px 25px; cursor: pointer; background: none; border: none; font-size: 1.1em;
+    font-weight: 600; color: var(--secondary-color); position: relative; transition: color 0.3s; z-index: 1;
+}
+.tab-button.active[data-tab="mandatory"] { color: var(--tab-mandatory-color); }
+.tab-button.active[data-tab="datatype"] { color: var(--tab-datatype-color); }
+.tab-button.active[data-tab="boundary"] { color: var(--tab-boundary-color); }
+.tab-button.active[data-tab="lov"] { color: var(--tab-lov-color); }
+.tab-button.active[data-tab="health"] { color: var(--tab-health-color); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.5s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+details > summary { cursor: pointer; font-weight: 600; color: #000033; list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: '► '; }
+details[open] > summary::before { content: '▼ '; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 800px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.modal-header { padding-bottom: 15px; border-bottom: 1px solid #eee; text-align: center; }
+.modal-header h2 { margin: 0; }
+.modal-body { padding: 20px 0; text-align: left; }
+.modal-footer { margin-top: 20px; text-align: right; }
+.status-text, #base-payload-status { margin-left: 15px; color: var(--secondary-color); font-style: italic; vertical-align: middle; }
+#base-payload-status.status-pass { color: var(--success-color); font-weight: bold; }
+#base-payload-status.status-fail { color: var(--fail-color); font-weight: bold; }
+.table-container { max-height: 600px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+th { background-color: #f8f9fa; position: sticky; top: 0; font-weight: bold; z-index: 2; }
+.status-pass { color: var(--success-color); font-weight: bold; }
+.status-fail { color: var(--fail-color); font-weight: bold; }
+.expand-btn { cursor: pointer; font-size: 1.5em; font-weight: bold; padding: 0 10px; user-select: none; color: var(--primary-color); }
+tr.details-row > td { padding: 0; background-color: #fafafa; }
+.details-content { padding: 20px; border-top: 2px solid var(--primary-color); }
+.details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.payload-viewer { background-color: #2d2d2d; color: #f1f1f1; border-radius: 8px; padding: 15px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; font-size: 0.9em; }
+.viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; }
+.copy-btn { background-color: #6c757d; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em; border: none; }
+.footer-note { text-align: center; margin-top: 40px; color: var(--secondary-color); font-style: italic; }
+.flex-group { display: flex; gap: 15px; align-items: flex-end; }
+.header-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 15px; align-items: center; margin-bottom: 10px; }
+.loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 0 15px; vertical-align: middle; }
+.report-actions button { font-size: 14px; padding: 10px 18px; margin-left: 10px; }
+#boundary-table .delete-btn, #lov-table .delete-btn { font-size: 12px; padding: 6px 10px; width: auto; }
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@media (max-width: 768px) {
+    body { padding: 10px; } h1 { font-size: 2em; }
+    h2 { flex-direction: column; align-items: flex-start; gap: 10px; }
+    h2 > div { display: flex; flex-wrap: wrap; gap: 10px; }
+    .card { padding: 20px; } .flex-group { flex-direction: column; align-items: stretch; }
+    .flex-group > .form-group, .flex-group > div { margin-bottom: 15px; }
+    .tab-button { padding: 12px 15px; font-size: 1em; } .details-grid { grid-template-columns: 1fr; }
+    button { padding: 12px 18px; width: 100%; }
+    .flex-group button, .flex-group > div > button, .button-group button { width: auto; }
+    .header-row { grid-template-columns: 1fr auto; }
+    .header-row input:nth-child(2) { grid-column: 1 / 2; }
+    .header-row button { grid-column: 2 / 3; grid-row: 1 / 3; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>✨ API Sentinel ✨</h1>
+
+    <div class="api-tabs">
+        <button class="api-tab-btn active" data-api-tab="quote">Quote</button>
+        <button class="api-tab-btn" data-api-tab="appsub">Appsub</button>
+        <button class="api-tab-btn" data-api-tab="leadshare">Lead Share</button>
+    </div>
+
+    <div class="card">
+        <h2>1. Global Configuration</h2>
+        
+        <div id="quote-tab-content" class="api-tab-content active">
+            <div class="flex-group">
+                <div class="form-group" style="flex-grow: 1;">
+                    <label for="quote-instance-select">Instance</label>
+                    <select id="quote-instance-select" class="instance-select" data-api="quote">
+                        <option value="RPTdev" selected>RPTdev</option>
+                        <option value="UAT">UAT</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex-grow: 3;">
+                    <label>API Endpoint</label>
+                    <input type="text" id="quote-endpoint-url" readonly disabled>
+                </div>
+            </div>
+        </div>
+
+        <div id="appsub-tab-content" class="api-tab-content">
+            <div class="flex-group">
+                <div class="form-group" style="flex-grow: 1;">
+                    <label for="appsub-instance-select">Instance</label>
+                    <select id="appsub-instance-select" class="instance-select" data-api="appsub">
+                        <option value="RPTdev" selected>RPTdev</option>
+                        <option value="UAT">UAT</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex-grow: 3;">
+                    <label>API Endpoint</label>
+                    <input type="text" id="appsub-endpoint-url" readonly disabled>
+                </div>
+            </div>
+        </div>
+        
+        <div id="leadshare-tab-content" class="api-tab-content">
+            <div class="flex-group">
+                <div class="form-group" style="flex-grow: 1;">
+                    <label for="leadshare-instance-select">Instance</label>
+                    <select id="leadshare-instance-select" class="instance-select" data-api="leadshare">
+                        <option value="RPTdev" selected>RPTdev</option>
+                        <option value="UAT">UAT</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex-grow: 3;">
+                    <label>API Endpoint</label>
+                    <input type="text" id="leadshare-endpoint-url" readonly disabled>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group"><label for="auth-token">Authorization Bearer Token</label><input type="text" id="auth-token" placeholder="Paste your Bearer token here" required></div>
+        <details><summary>Request Headers</summary><div class="form-group" style="margin-top: 20px;"><div id="headers-container"></div><div class="flex-group" style="justify-content: flex-start; margin-top: 15px; flex-direction: row;"><button id="add-header-btn" class="btn-secondary" style="padding: 8px 15px; font-size: 14px;">+ Add Header</button></div></div></details>
+    </div>
+    
+    <div class="card">
+        <h2>2. Base Request Payload</h2>
+        <div class="form-group"><label for="json-payload">Paste your base JSON request body here. The tool will read its structure dynamically.</label><textarea id="json-payload" rows="10" placeholder="Paste your JSON payload here..."></textarea></div>
+        <div class="form-group">
+            <label>Baseline Pre-Check</label>
+            <p style="font-size: 0.9em; color: var(--secondary-color); margin-top: -10px;">Run a single test with the original payload to verify it returns a success code before running negative tests.</p>
+            <div class="flex-group" style="align-items: center; flex-direction: row;">
+                <div style="flex-grow: 1;">
+                    <label for="base-expected-status">Expected Success Status</label>
+                    <input type="text" id="base-expected-status" value="200" style="width: 120px;">
+                </div>
+                <button id="test-base-payload-btn" style="flex-shrink: 0;">✅ Test Base Payload</button>
+                <div class="loader" id="base-payload-loader"></div>
+                <span id="base-payload-status"></span>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="tab-bar">
+            <button class="tab-button active" data-tab="mandatory">Mandatory</button>
+            <button class="tab-button" data-tab="datatype">Data Type</button>
+            <button class="tab-button" data-tab="boundary">Boundary</button>
+            <button class="tab-button" data-tab="lov">LOV</button>
+            <button class="tab-button" data-tab="health" style="display: none;">Health Qs</button>
+            <div id="tab-slider"></div>
+        </div>
+        
+        <div id="mandatory-tab" class="tab-content active">
+            <h3>Scenario A: Mandatory Field Validation</h3>
+            <p>Removes one field at a time and sends a request. Useful for checking which fields are truly required by the API.</p>
+            <div class="flex-group" style="margin-bottom: 20px;"><div class="form-group" style="flex-grow: 1; margin-bottom: 0;"><label for="mandatory-field-search">Search Fields</label><input type="search" id="mandatory-field-search" placeholder="e.g., healthDetails"></div><div class="form-group" style="flex-shrink: 0; margin-bottom: 0;"><label>Expected Status</label><input type="text" id="mandatory-expected-status" value="400" style="width: 100px;"></div></div>
+            <div class="button-group" style="margin: 20px 0; display: flex; gap: 10px;"><button id="select-all-btn" class="btn-secondary">Select All Visible</button><button id="deselect-all-btn" class="btn-secondary">Deselect All Visible</button></div>
+            <div class="table-container"><table><thead><tr><th>Test?</th><th>Field Path</th></tr></thead><tbody id="mandatory-fields-table"></tbody></table></div><br>
+            <div class="flex-group" style="align-items: center;"><button id="run-mandatory-test-btn">🧪 Run Mandatory Suite</button><div class="loader" id="mandatory-loader"></div><span class="status-text" id="mandatory-status-text"></span></div>
+        </div>
+        
+        <div id="datatype-tab" class="tab-content">
+            <h3>Scenario B: Data Type Validation</h3>
+            <p>Sends incorrect data types for each field to check for robust type validation on the server.</p>
+            <div class="flex-group" style="margin-bottom: 20px;"><div class="form-group" style="flex-grow: 1; margin-bottom: 0;"><label for="datatype-field-search">Search Fields</label><input type="search" id="datatype-field-search" placeholder="e.g., transactionId"></div><div class="form-group" style="flex-shrink: 0; margin-bottom: 0;"><label>Expected Status</label><input type="text" id="datatype-expected-status" value="400" style="width: 100px;"></div></div>
+            <div class="table-container" style="margin-top: 20px;"><table><thead><tr><th>Field Path</th><th>Original Type</th><th>New Type to Test</th></tr></thead><tbody id="datatype-fields-table"></tbody></table></div><br>
+            <div class="flex-group" style="align-items: center;"><button id="run-datatype-test-btn">🔬 Run Data Type Suite</button><div class="loader" id="datatype-loader"></div><span class="status-text" id="datatype-status-text"></span></div>
+        </div>
+
+        <div id="boundary-tab" class="tab-content">
+            <h3>Scenario C: Boundary Value Analysis</h3>
+            <p>Tests fields against specified limits (min/max). Add fields from the payload and define their boundary conditions.</p>
+            <div class="flex-group" style="margin-bottom: 20px; align-items: flex-end;">
+                 <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                    <label>Expected Status for Invalid Cases</label>
+                    <input type="text" id="boundary-expected-status" value="400" style="width: 100px;">
+                </div>
+                <button id="add-boundary-field-btn" class="btn-secondary" style="margin-bottom: 0;">+ Add Field to Test</button>
+            </div>
+            <div class="table-container" style="margin-top: 20px;">
+                <table id="boundary-table">
+                    <thead>
+                        <tr>
+                            <th>Field Path</th>
+                            <th>Boundary Definition</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boundary-fields-table">
+                    </tbody>
+                </table>
+            </div>
+            <p style="font-size: 0.85em; color: var(--secondary-color); margin-top: 15px;">
+                <b>Examples:</b> Range: <code>10 to 40</code>, Discrete: <code>5, 6, 8, 10</code>, Date: <code>30days to 50years</code>, Dependent: <code>PPT+deferment</code>
+            </p>
+            <br>
+            <div class="flex-group" style="align-items: center;">
+                <button id="run-boundary-test-btn">🎯 Run Boundary Suite</button>
+                <div class="loader" id="boundary-loader"></div>
+                <span class="status-text" id="boundary-status-text"></span>
+            </div>
+        </div>
+
+        <div id="lov-tab" class="tab-content">
+            <h3>Scenario D: List of Values (LOV) Validation</h3>
+            <p>Sends one request for each value provided for a given field to test all valid/invalid list options.</p>
+            <div class="flex-group" style="margin-bottom: 20px; align-items: flex-end;">
+                 <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                    <label>Expected Status for Each Value</label>
+                    <input type="text" id="lov-expected-status" value="400" style="width: 100px;">
+                </div>
+                <button id="add-lov-field-btn" class="btn-secondary" style="margin-bottom: 0;">+ Add Field to Test</button>
+            </div>
+            <div class="table-container" style="margin-top: 20px;">
+                <table id="lov-table">
+                    <thead>
+                        <tr>
+                            <th>Field Path</th>
+                            <th>Values (comma or newline separated)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lov-fields-table">
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            <div class="flex-group" style="align-items: center;">
+                <button id="run-lov-test-btn">📋 Run LOV Suite</button>
+                <div class="loader" id="lov-loader"></div>
+                <span class="status-text" id="lov-status-text"></span>
+            </div>
+        </div>
+
+
+        <div id="health-tab" class="tab-content">
+            <h3>Scenario E: Health Details Validation</h3>
+            <p>Runs pre-defined scenarios that manipulate the `healthDetails` array. Each test is run per-question where applicable.</p>
+            <div class="flex-group" style="margin-top:20px;"><div class="form-group" style="flex-grow: 1; margin-bottom: 0;"><label for="health-scenario-select">Select Scenario</label><select id="health-scenario-select"><option value="ALL_ANSWERED">1. All Questions Answered (Baseline)</option><option value="SUB_QUESTIONS_EMPTY">2. Main Q 'Yes', Sub-Qs Empty (Per Question)</option><option value="ALL_WRONG_ANSWERS">3. All Wrong Answers (Per Question)</option><option value="ONE_OBJECT_EMPTY">4. Blank Out One Question Object (Per Question)</option><option value="FEW_QUESTIONS_MISSING">5. Remove One Question Object (Per Question)</option><option value="ENTIRE_BLOCK_REMOVED">6. Entire HealthDetails Block Removed</option></select></div><div class="form-group" style="flex-shrink: 0; margin-bottom: 0;"><label>Expected Status</label><input type="text" id="health-expected-status" value="400" style="width: 100px;"></div></div>
+            <div class="flex-group" style="margin-top:20px; align-items: center;"><button id="run-health-test-btn">🩺 Run Health Suite</button><div class="loader" id="health-loader"></div><span class="status-text" id="health-status-text"></span></div>
+        </div>
+    </div>
+    <div id="report-card" class="card">
+        <h2>4. Test Execution Report<div class="report-actions"><button id="history-btn" class="btn-secondary">📜 History</button><button id="download-current-btn" class="btn-secondary">⬇️ Download Selected</button><button id="download-log-btn" class="btn-secondary">⬇️ Download Full Log</button></div></h2>
+        <h3 id="report-title">Awaiting test execution...</h3>
+        <div class="table-container"><table><thead><tr><th><input type="checkbox" id="report-select-all" title="Select/Deselect All"></th><th></th><th>S.No.</th><th>Test Description</th><th>Timestamp</th><th>Expected Status</th><th>Actual Status</th><th>Expected Response</th><th>Result</th><th>Response Snippet</th></tr></thead><tbody id="report-table-body"></tbody></table></div>
+    </div>
+    <p class="footer-note">Developed by Prajwal</p>
+</div>
+<div id="error-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modal-title"></h2></div><div class="modal-body"><p id="modal-message"></p></div><div class="modal-footer" style="text-align:center;"><button id="modal-close-btn" class="btn-danger">Close</button></div></div></div>
+<div id="history-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2 style="color:#000033">Test History</h2></div><div class="modal-body"><p>Click a past run to view its results. History is saved in your browser.</p><ul id="history-list" style="list-style: none; padding: 0; max-height: 400px; overflow-y: auto;"></ul></div><div class="modal-footer"><button id="clear-history-btn" class="btn-danger">Clear All History</button><button id="history-close-btn" class="btn-secondary">Close</button></div></div></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- ELEMENTS ---
+    const payloadTextarea = document.getElementById('json-payload');
+    const authTokenInput = document.getElementById('auth-token');
+    const headersContainer = document.getElementById('headers-container');
+    const reportTableBody = document.getElementById('report-table-body');
+    const reportCard = document.getElementById('report-card');
+    const reportTitle = document.getElementById('report-title');
+    const downloadCurrentBtn = document.getElementById('download-current-btn');
+    const downloadLogBtn = document.getElementById('download-log-btn');
+    const errorModal = document.getElementById('error-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const historyModal = document.getElementById('history-modal');
+    const historyBtn = document.getElementById('history-btn');
+    const historyCloseBtn = document.getElementById('history-close-btn');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const tabSlider = document.getElementById('tab-slider');
+
+    // --- INITIAL DATA & CONFIG ---
+    const initialHeaders = {"Content-Type":"application/json","x-frame-options":"DENY","encrypt":"false","content-security-policy":"frame-ancestors 'none'"};
+    // UPDATED apiEndpoints object
+    const apiEndpoints = {
+        quote: {
+            RPTdev: 'https://rptdev02.service-now.com/api/x_rptp_smartinte_0/v1/get_quote',
+            UAT: 'https://smartaggregatordev.service-now.com/api/x_rptp_smartinte_0/v1/get_quote'
+        },
+        appsub: {
+            RPTdev: 'https://rptdev02.service-now.com/api/x_rptp_smartinte_0/v1/save_proposal_api',
+            UAT: 'https://smartaggregatordev.service-now.com/api/x_rptp_smartinte_0/v1/save_proposal_api'
+        },
+        leadshare: {
+            RPTdev: 'https://rptdev02.service-now.com/api/x_rptp_smartinte_0/v1/lead/create',
+            UAT: 'https://smartaggregatordev.service-now.com/api/x_rptp_smartinte_0/v1/lead/share'
+        }
+    };
+    let currentApiEndpoint = '';
+
+    // --- API TABS & ENDPOINT LOGIC ---
+    const apiTabButtons = document.querySelectorAll('.api-tab-btn');
+    const apiTabContents = document.querySelectorAll('.api-tab-content');
+    const instanceSelects = document.querySelectorAll('.instance-select');
+
+    function updateEndpoint() {
+        const activeApiTab = document.querySelector('.api-tab-btn.active').dataset.apiTab;
+        const selectedInstance = document.getElementById(`${activeApiTab}-instance-select`).value;
+        currentApiEndpoint = apiEndpoints[activeApiTab][selectedInstance];
+        document.getElementById(`${activeApiTab}-endpoint-url`).value = currentApiEndpoint;
+    }
+
+    apiTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            apiTabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            apiTabContents.forEach(content => content.classList.remove('active'));
+            document.getElementById(button.dataset.apiTab + '-tab-content').classList.add('active');
+            updateEndpoint();
+        });
+    });
+    instanceSelects.forEach(select => select.addEventListener('change', updateEndpoint));
+    
+    // --- TEST SCENARIO TAB SLIDER LOGIC ---
+    function moveTabSlider(activeButton) {
+        if (!activeButton || activeButton.style.display === 'none') {
+            tabSlider.style.width = '0px';
+            return;
+        }
+        tabSlider.style.width = `${activeButton.offsetWidth}px`;
+        tabSlider.style.left = `${activeButton.offsetLeft}px`;
+        tabSlider.dataset.color = activeButton.dataset.tab;
+    }
+
+    // --- TEST SCENARIO TAB SWITCHING LOGIC ---
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            tabContents.forEach(content => content.classList.remove('active'));
+            document.getElementById(button.dataset.tab + '-tab').classList.add('active');
+            moveTabSlider(button);
+            updateAllButtonStates();
+        });
+    });
+
+    // --- CSV, LOGGING, & HISTORY ---
+    function saveReportToHistory(title, results) {
+        let history = JSON.parse(localStorage.getItem('api_test_suite_history') || '[]');
+        const newRun = { id: Date.now(), title, results };
+        history.push(newRun);
+        if (history.length > 20) { history.shift(); }
+        localStorage.setItem('api_test_suite_history', JSON.stringify(history));
+    }
+    function appendToMasterLog(results, reportName) {
+        let masterLog = JSON.parse(localStorage.getItem('api_test_log') || '[]');
+        const newEntries = results.map(r => ({ ...r, scenario: reportName }));
+        masterLog.push(...newEntries);
+        localStorage.setItem('api_test_log', JSON.stringify(masterLog));
+    }
+    function generateAndDownloadCsv(results, filename) {
+        if (!results || results.length === 0) {
+            showModal('Export Error', 'There are no results to export.');
+            return;
+        }
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        const headers = [
+            "S.No.", 
+            "Test Description", 
+            "Field", 
+            "Expected Code", 
+            "Expected Response", 
+            "Actual Code", 
+            "Actual Response", 
+            "Result", 
+            "TransactionId"
+        ];
+        
+        csvContent += headers.join(",") + "\r\n";
+        
+        results.forEach((row, index) => {
+            const formatField = (field) => {
+                const value = String(field || '');
+                // Escape quotes and wrap in quotes if it contains a comma, newline or a quote
+                if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            };
+
+            const result = row.status == row.expectedStatus ? 'Pass' : 'Fail';
+            
+            const csvRow = [
+                index + 1,
+                formatField(row.description),
+                formatField(row.field),
+                row.expectedStatus,
+                formatField(row.expectedResponse),
+                row.actualCode,
+                formatField(row.actualResponse),
+                result,
+                formatField(row.transactionId)
+            ].join(",");
+            
+            csvContent += csvRow + "\r\n";
+        });
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `${filename}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    downloadCurrentBtn.onclick = () => {
+        const checkedRows = document.querySelectorAll('.report-row-checkbox:checked');
+        if (checkedRows.length === 0) {
+            showModal('No Selection', 'Please select at least one row to download by checking the boxes.');
+            return;
+        }
+        const resultsToExport = [];
+        checkedRows.forEach(checkbox => {
+            const tr = checkbox.closest('tr');
+            if (tr && tr.rowData) { resultsToExport.push(tr.rowData); }
+        });
+        const filename = reportTitle.textContent.replace('Report for: ', '').replace(/[^a-z0-9]/gi, '_').toLowerCase() || `report_${new Date().toISOString()}`;
+        generateAndDownloadCsv(resultsToExport, `current_report_${filename}`);
+    };
+    downloadLogBtn.onclick = () => {
+        const masterLog = JSON.parse(localStorage.getItem('api_test_log') || '[]').map(r => ({...r})); // flatten
+        generateAndDownloadCsv(masterLog, `api_sentinel_full_log_${new Date().toISOString().split('T')[0]}`);
+    };
+
+    // --- CORE & UTILITY FUNCTIONS ---
+    function showModal(title, message) { modalTitle.textContent = title; modalMessage.textContent = message; errorModal.style.display = "block"; }
+    function hideErrorModal() { errorModal.style.display = "none"; }
+    modalCloseBtn.onclick = hideErrorModal;
+    window.onclick = (event) => { if (event.target == errorModal) { hideErrorModal(); } if (event.target == historyModal) { historyModal.style.display = 'none'; }};
+    
+    function getObjectPaths(obj, paths = new Set(), prefix = '') { if (obj === null || typeof obj !== 'object') return; for (const key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { const newPath = prefix ? `${prefix}.${key}` : key; paths.add(newPath); const value = obj[key]; if (typeof value === 'object' && value !== null) { if (Array.isArray(value)) { value.forEach((item, index) => { const itemPrefix = `${newPath}[${index}]`; if (typeof item === 'object' && item !== null) { paths.add(itemPrefix); getObjectPaths(item, paths, itemPrefix); } else { paths.add(itemPrefix); } }); } else { getObjectPaths(value, paths, newPath); } } } } return paths; }
+    
+    function getValueByPath(obj, path) { try { return path.replace(/\[(\d+)\]/g, '.$1').split('.').reduce((o, k) => o[k], obj); } catch (e) { return undefined; } }
+
+    function modifyFieldByPath(obj, path, value) { const pathParts = path.replace(/\[(\d+)\]/g, '.$1').split('.'); let current = obj; for (let i = 0; i < pathParts.length - 1; i++) { current = current[pathParts[i]]; if (current === undefined) return; } const lastPart = pathParts[pathParts.length - 1]; if (value === undefined) { Array.isArray(current) ? current.splice(lastPart, 1) : delete current[lastPart]; } else { current[lastPart] = value; } }
+
+    function getHeadersFromUI() { const headers = {}; headersContainer.querySelectorAll('.header-row').forEach(row => { const key = row.querySelector('.header-key').value.trim(); const value = row.querySelector('.header-value').value.trim(); if (key) headers[key] = value; }); return headers; }
+    function detectType(obj, path) { try { return _detectType(getValueByPath(obj, path)); } catch (e) { return 'Object/Array'; } }
+    function _detectType(value) { if (value === null) return 'Null'; if (typeof value === 'boolean') return 'Boolean'; if (Array.isArray(value)) return 'Array'; if (typeof value === 'object') return 'Object'; if (typeof value === 'number') return 'Number'; return 'String'; }
+    function addHeaderRow(key = '', value = '') { const row = document.createElement('div'); row.className = 'header-row'; row.innerHTML = `<input type="text" class="header-key" placeholder="Header Key" value="${key}"><input type="text" class="header-value" placeholder="Header Value" value="${value}"><button class="delete-btn btn-danger" style="padding: 5px 10px; font-size: 12px; width: auto;">X</button>`; headersContainer.appendChild(row); row.querySelector('.delete-btn').addEventListener('click', () => row.remove()); }
+
+    function populateAllFields() {
+        const mandatoryTable = document.getElementById('mandatory-fields-table');
+        const datatypeTable = document.getElementById('datatype-fields-table');
+        const healthTabButton = document.querySelector('.tab-button[data-tab="health"]');
+        mandatoryTable.innerHTML = '';
+        datatypeTable.innerHTML = '';
+        healthTabButton.style.display = 'none';
+        try {
+            const payloadText = payloadTextarea.value; if (!payloadText.trim()) return;
+            const payload = JSON.parse(payloadText);
+            if (payload.data?.healthDetails && Array.isArray(payload.data.healthDetails)) {
+                healthTabButton.style.display = 'inline-block';
+            }
+            const allPaths = Array.from(getObjectPaths(payload)).sort();
+            allPaths.forEach(path => {
+                mandatoryTable.innerHTML += `<tr data-path="${path}"><td><input type="checkbox" class="mandatory-checkbox" value="${path}" style="transform: scale(1.2);"></td><td><code>${path}</code></td></tr>`;
+                const originalType = detectType(payload, path);
+                datatypeTable.innerHTML += `<tr data-path="${path}"><td><code>${path}</code></td><td class="original-type">${originalType}</td><td><select class="datatype-select" data-path="${path}"><option value="NO_TEST">Don't Test</option><option value="STRING">String</option><option value="NUMBER">Number</option><option value="BOOLEAN_TRUE">Boolean (true)</option><option value="BOOLEAN_FALSE">Boolean (false)</option><option value="NULL">Null</option><option value="EMPTY_STRING">Empty String</option><option value="INVALID_OBJECT">Invalid Object {}</option><option value="INVALID_ARRAY">Invalid Array []</option></select></td></tr>`;
+            });
+        } catch (e) {} finally {
+            moveTabSlider(document.querySelector('.tab-button.active'));
+            updateAllButtonStates();
+        }
+    }
+    
+    // This function is a placeholder as the logic is now inside makeApiCall
+    function extractSmartErrorMessage(jsonResponse) { return findGenericErrorMessage(jsonResponse); }
+    function findGenericErrorMessage(obj) { const errorKeys = ['message', 'detail', 'error', 'title', 'msg', 'errormessage', 'errordetail', 'response']; let foundMessage = null; function search(currentObj) { if (foundMessage || !currentObj || typeof currentObj !== 'object') return; for (const key of Object.keys(currentObj)) { const value = currentObj[key]; if (errorKeys.includes(key.toLowerCase()) && typeof value === 'string' && value.trim() !== '') { foundMessage = value; return; } } for (const key of Object.keys(currentObj)) { if (typeof currentObj[key] === 'object') { search(currentObj[key]); if (foundMessage) return; } } } search(obj); return foundMessage; }
+    
+    async function makeApiCall(config) {
+        // This function is now a generic wrapper; parsing is done after the call.
+        const PROXY_URL = 'http://localhost:3000/proxy'; // This needs to be running locally
+        const proxyBody = {
+            bearerToken: authTokenInput.value.trim(),
+            headers: getHeadersFromUI(),
+            payload: config.payload
+        };
+
+        let responseText, actualStatus;
+        try {
+            const response = await fetch(PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Target-URL': config.endpoint },
+                body: JSON.stringify(proxyBody)
+            });
+            responseText = await response.text();
+            actualStatus = response.status;
+        } catch (error) {
+            return {
+                status: 'Proxy Error', actualCode: 'N/A', actualResponse: 'Could not connect to proxy', responseText: '', snippet: '[Proxy Error] Connection Failed',
+                description: config.description, expectedResponse: config.expectedResponse, requestPayload: config.payload, timestamp: new Date(), field: config.field || '', transactionId: ''
+            };
+        }
+
+        // --- DYNAMIC RESPONSE PARSING ---
+        let actualCode = actualStatus;
+        let actualResponse = '';
+        let transactionId = '';
+        let snippet = `[${actualStatus}] HTTP Status`;
+        const activeApi = document.querySelector('.api-tab-btn.active').dataset.apiTab;
+
+        try {
+            const jsonResponse = JSON.parse(responseText);
+            transactionId = jsonResponse.transactionId || jsonResponse.result?.transactionId || jsonResponse.payload?.transactionId || '';
+
+            if (activeApi === 'leadshare' && jsonResponse.result) {
+                actualCode = jsonResponse.result.code || actualStatus;
+                // Combine status and response message for a full response
+                const responseMessage = (typeof jsonResponse.result.response === 'object') ? JSON.stringify(jsonResponse.result.response) : jsonResponse.result.response;
+                actualResponse = [jsonResponse.result.status, responseMessage].filter(Boolean).join(' - ');
+            
+            } else if (activeApi === 'appsub' && jsonResponse.result) {
+                actualCode = jsonResponse.result.code || actualStatus;
+                actualResponse = [jsonResponse.result.message, jsonResponse.result.detail].filter(Boolean).join(' - ');
+            
+            } else if (activeApi === 'quote' && (jsonResponse.result || jsonResponse.payload)) {
+                actualCode = jsonResponse.result?.status || jsonResponse.payload?.quote?.[0]?.calculations?.[0]?.errorMessage?.code || actualStatus;
+                actualResponse = jsonResponse.result?.status || ''; // Simplified for quote
+            
+            } else {
+                 // Generic fallback for unknown structures
+                actualResponse = findGenericErrorMessage(jsonResponse) || responseText;
+            }
+
+            snippet = `[${actualCode}] ${actualResponse || 'No specific response message found.'}`;
+
+        } catch (e) {
+            // Not a JSON response
+            actualResponse = responseText;
+            snippet = `[${actualStatus}] ${responseText.substring(0, 100)}`;
+        }
+
+        return {
+            status: actualStatus, actualCode, actualResponse, responseText, snippet,
+            description: config.description, expectedResponse: config.expectedResponse, requestPayload: config.payload,
+            timestamp: new Date(), field: config.field || '', transactionId
+        };
+    }
+
+
+    function populateReportTable(data) {
+        reportTableBody.innerHTML = '';
+        document.getElementById('report-select-all').checked = false; // Reset select all
+        data.forEach((row, index) => {
+            const rowId = `report-row-${Date.now()}-${index}`;
+            const mainRow = document.createElement('tr');
+            mainRow.rowData = row; // Attach full data object to the element
+            
+            // Result is based on HTTP status code match
+            const resultClass = row.status == row.expectedStatus ? 'status-pass' : 'status-fail';
+            const resultText = row.status == row.expectedStatus ? '✅ Pass' : '❌ Fail';
+
+            mainRow.innerHTML = `<td><input type="checkbox" class="report-row-checkbox"></td><td><span class="expand-btn" data-target="${rowId}">+</span></td><td>${index + 1}</td><td><code style="white-space: pre-wrap; word-break: break-all;">${row.description}</code></td><td>${new Date(row.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'medium' })}</td><td>${row.expectedStatus}</td><td>${row.status}</td><td>${row.expectedResponse || ''}</td><td class="${resultClass}">${resultText}</td><td><code style="white-space: pre-wrap; word-break: break-all;">${row.snippet || ''}</code></td>`;
+            
+            const detailsRow = document.createElement('tr');
+            detailsRow.id = rowId;
+            detailsRow.className = 'details-row';
+            detailsRow.style.display = 'none';
+            const reqPayload = JSON.stringify(row.requestPayload, null, 2).replace(/</g, '<').replace(/>/g, '>');
+            const resBody = String(row.responseText || '').replace(/</g, '<').replace(/>/g, '>');
+            detailsRow.innerHTML = `<td colspan="10"><div class="details-content"><div class="details-grid"><div><div class="viewer-header"><h4>Request Payload</h4><button class="copy-btn">Copy</button></div><pre class="payload-viewer req-payload"><code>${reqPayload}</code></pre></div><div><div class="viewer-header"><h4>Response Body</h4><button class="copy-btn">Copy</button></div><pre class="payload-viewer res-body"><code>${resBody}</code></pre></div></div></div></td>`;
+            reportTableBody.appendChild(mainRow);
+            reportTableBody.appendChild(detailsRow);
+        });
+    }
+
+    async function runBasePayloadTest() {
+        const button = document.getElementById('test-base-payload-btn');
+        const loader = document.getElementById('base-payload-loader');
+        const statusEl = document.getElementById('base-payload-status');
+        button.disabled = true; loader.style.display = 'inline-block';
+        statusEl.textContent = 'Testing...'; statusEl.className = '';
+        let basePayload;
+        try { basePayload = JSON.parse(payloadTextarea.value); } catch (e) {
+            showModal('Invalid Payload', 'The JSON in the payload section is not valid.');
+            button.disabled = false; loader.style.display = 'none'; statusEl.textContent = ''; return;
+        }
+        const expectedStatus = document.getElementById('base-expected-status').value;
+        const result = await makeApiCall({ endpoint: currentApiEndpoint, payload: basePayload, description: 'Baseline Payload Test' });
+        if (result.status == expectedStatus) {
+            statusEl.textContent = `✅ Success: Status ${result.status}.`;
+            statusEl.className = 'status-pass';
+        } else {
+            statusEl.textContent = `❌ Fail: Expected ${expectedStatus}, got ${result.status}.`;
+            statusEl.className = 'status-fail';
+        }
+        button.disabled = false; loader.style.display = 'none';
+    }
+
+
+    async function runTest(testType) {
+        const button = document.getElementById(`run-${testType}-test-btn`);
+        const loader = document.getElementById(`${testType}-loader`);
+        const statusText = document.getElementById(`${testType}-status-text`);
+        const cleanup = () => { updateAllButtonStates(); loader.style.display = 'none'; statusText.textContent = ''; };
+        if (!authTokenInput.value.trim()) { showModal('Input Required', 'Authorization Bearer Token is mandatory.'); return; }
+        button.disabled = true; loader.style.display = 'inline-block';
+        reportTableBody.innerHTML = ''; reportTitle.textContent = '';
+        let basePayload;
+        try {
+            const payloadText = payloadTextarea.value;
+            if (!payloadText.trim()) { showModal('Input Required', 'Please provide a JSON payload to test.'); cleanup(); return; }
+            basePayload = JSON.parse(payloadText);
+        } catch (e) { showModal('Invalid Payload', 'The JSON in the payload section is not valid. Please fix it.'); cleanup(); return; }
+        
+        const endpoint = currentApiEndpoint;
+        if (!endpoint) { showModal('Input Required', 'Please select a valid API endpoint.'); cleanup(); return; }
+        
+        const expectedStatus = parseInt(document.getElementById(`${testType}-expected-status`).value, 10);
+        const promises = [];
+        let reportName = '';
+        const clonePayload = () => JSON.parse(JSON.stringify(basePayload));
+
+        if (testType === 'mandatory') {
+            reportName = 'Mandatory Field Validation';
+            const checkboxes = document.querySelectorAll('.mandatory-checkbox:checked');
+            if (checkboxes.length === 0) { showModal('Input Required', 'Please check at least one field for the mandatory test.'); cleanup(); return; }
+            statusText.textContent = `Preparing ${checkboxes.length} requests...`;
+            checkboxes.forEach(checkbox => {
+                const testPayload = clonePayload();
+                const path = checkbox.value;
+                modifyFieldByPath(testPayload, path, undefined);
+                promises.push(makeApiCall({
+                    endpoint,
+                    payload: testPayload,
+                    description: `Removed field: '${path}'`,
+                    expectedResponse: `'${path}' is missing`,
+                    field: path
+                }));
+            });
+        } else if (testType === 'datatype') {
+            reportName = 'Data Type Validation';
+            const selects = Array.from(document.querySelectorAll('.datatype-select')).filter(s => s.value !== 'NO_TEST');
+            if (selects.length === 0) { showModal('Input Required', "Please select a 'New Type to Test' for at least one field."); cleanup(); return; }
+            statusText.textContent = `Preparing ${selects.length} requests...`;
+            selects.forEach(select => {
+                const testPayload = clonePayload();
+                const path = select.dataset.path; let testValue;
+                switch (select.value) {
+                    case 'STRING': testValue = 'test_string_123'; break; case 'NUMBER': testValue = 12345; break;
+                    case 'BOOLEAN_TRUE': testValue = true; break; case 'BOOLEAN_FALSE': testValue = false; break;
+                    case 'NULL': testValue = null; break; case 'EMPTY_STRING': testValue = ""; break;
+                    case 'INVALID_OBJECT': testValue = {}; break; case 'INVALID_ARRAY': testValue = []; break;
+                }
+                modifyFieldByPath(testPayload, path, testValue);
+                promises.push(makeApiCall({
+                    endpoint,
+                    payload: testPayload,
+                    description: `Set field '${path}' to type ${select.value}`,
+                    expectedResponse: `Data type validation should fail for '${path}'`,
+                    field: path
+                }));
+            });
+        } else if (testType === 'boundary') {
+            reportName = 'Boundary Value Analysis';
+            const rows = document.querySelectorAll('#boundary-fields-table tr');
+            if (rows.length === 0) { showModal('Input Required', "Please add at least one field for boundary testing."); cleanup(); return; }
+            statusText.textContent = `Analyzing ${rows.length} boundary rules...`;
+            rows.forEach(row => {
+                const fieldPath = row.querySelector('.boundary-field-select').value;
+                const definition = row.querySelector('.boundary-definition-input').value;
+                if (!fieldPath || !definition) return;
+                const { min, max } = parseBoundaryDefinition(definition, basePayload);
+                if (min.value !== undefined) {
+                    const testPayload = clonePayload();
+                    modifyFieldByPath(testPayload, fieldPath, min.value);
+                    promises.push(makeApiCall({ endpoint, payload: testPayload, description: `Boundary Test: Field '${fieldPath}' - Min Case: ${min.desc}`, expectedResponse: "Should fail for out-of-bounds value", field: fieldPath}));
+                }
+                if (max.value !== undefined) {
+                    const testPayload = clonePayload();
+                    modifyFieldByPath(testPayload, fieldPath, max.value);
+                    promises.push(makeApiCall({ endpoint, payload: testPayload, description: `Boundary Test: Field '${fieldPath}' - Max Case: ${max.desc}`, expectedResponse: "Should fail for out-of-bounds value", field: fieldPath}));
+                }
+            });
+        } else if (testType === 'lov') {
+            reportName = 'List of Values (LOV) Validation';
+            const rows = document.querySelectorAll('#lov-fields-table tr');
+            if (rows.length === 0) { showModal('Input Required', "Please add at least one field for LOV testing."); cleanup(); return; }
+            statusText.textContent = `Analyzing ${rows.length} LOV rules...`;
+            rows.forEach(row => {
+                const fieldPath = row.querySelector('.lov-field-select').value;
+                const valuesText = row.querySelector('.lov-values-input').value;
+                if (!fieldPath || !valuesText) return;
+                const values = valuesText.split(/[\n,]+/).map(v => v.trim()).filter(Boolean);
+                values.forEach(value => {
+                    const testPayload = clonePayload();
+                    const numericValue = Number(value);
+                    modifyFieldByPath(testPayload, fieldPath, isNaN(numericValue) ? value : numericValue);
+                    promises.push(makeApiCall({ endpoint, payload: testPayload, description: `LOV Test: Set '${fieldPath}' to '${value}'`, expectedResponse: `Should validate value '${value}'`, field: fieldPath}));
+                });
+            });
+        } else if (testType === 'health') {
+            reportName = 'Health Questions Scenarios';
+            const scenario = document.getElementById('health-scenario-select').value;
+            const healthDetails = basePayload.data?.healthDetails;
+            if (!healthDetails || !Array.isArray(healthDetails)) { showModal('Payload Error', 'The `data.healthDetails` field does not exist or is not an array.'); cleanup(); return; }
+            const runHealthTest = (payload, desc) => promises.push(makeApiCall({ endpoint, payload, description: desc, expectedResponse: 'Should fail', field: 'healthDetails'}));
+            switch(scenario) {
+                case 'ALL_ANSWERED':
+                    promises.push(makeApiCall({ endpoint, payload: clonePayload(), description: 'Health Scenario 1: Baseline with all questions answered', expectedResponse: 'Should succeed', field: 'healthDetails' }));
+                    break;
+                case 'SUB_QUESTIONS_EMPTY':
+                    healthDetails.forEach((q, index) => {
+                        if (Object.keys(q).length > 2 && q.answer1?.toLowerCase() === 'yes') { 
+                            const testPayload = clonePayload();
+                            const questionToModify = testPayload.data.healthDetails[index];
+                            Object.keys(questionToModify).forEach(key => { if (key !== 'code' && key !== 'answer1') { questionToModify[key] = ''; } });
+                            runHealthTest(testPayload, `Health Scenario 2 (Sub-Qs Empty) for question: ${q.code || `index ${index}`}`);
+                        }
+                    });
+                    break;
+                 case 'ENTIRE_BLOCK_REMOVED':
+                    const blockRemovedPayload = clonePayload();
+                    delete blockRemovedPayload.data.healthDetails;
+                    runHealthTest(blockRemovedPayload, 'Health Scenario 6: Entire HealthDetails Block Removed');
+                    break;
+            }
+            statusText.textContent = `Preparing ${promises.length} request(s)...`;
+        }
+
+        if (promises.length === 0) { showModal('No Tests to Run', 'The selected scenario did not generate any test cases. This can happen if no fields match the criteria or definitions are invalid.'); cleanup(); return; }
+        statusText.textContent = `Sending ${promises.length} request(s) via proxy...`;
+        reportTitle.textContent = `Report for: ${reportName}`;
+        const results = await Promise.all(promises);
+        statusText.textContent = 'Processing results...';
+        const finalResults = results.map(r => ({ ...r, expectedStatus }));
+        populateReportTable(finalResults);
+        saveReportToHistory(reportName, finalResults);
+        appendToMasterLog(finalResults, reportName);
+        cleanup();
+        reportCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // --- BOUNDARY/LOV TESTING LOGIC ---
+    function addDynamicRow(type) {
+        const tableBody = document.getElementById(`${type}-fields-table`);
+        const newRow = document.createElement('tr');
+        
+        let payloadPaths = [];
+        try {
+            const payload = JSON.parse(payloadTextarea.value);
+            payloadPaths = Array.from(getObjectPaths(payload)).sort();
+        } catch(e) {
+            showModal("Payload Error", `Cannot add ${type} field: The base JSON payload is invalid.`);
+            return;
+        }
+        const selectOptions = payloadPaths.map(p => `<option value="${p}">${p}</option>`).join('');
+
+        let inputHtml = '';
+        if (type === 'boundary') {
+            inputHtml = `<td><input type="text" class="boundary-definition-input" placeholder="e.g., 10 to 40 OR 30days to 50years"></td>`;
+        } else if (type === 'lov') {
+            inputHtml = `<td><textarea class="lov-values-input" rows="2" placeholder="value1, value2, value3..."></textarea></td>`;
+        }
+
+        newRow.innerHTML = `
+            <td><select class="${type}-field-select">${selectOptions}</select></td>
+            ${inputHtml}
+            <td><button class="delete-btn btn-danger">Remove</button></td>
+        `;
+        tableBody.appendChild(newRow);
+        newRow.querySelector('.delete-btn').addEventListener('click', () => newRow.remove());
+        updateAllButtonStates();
+    }
+
+
+    function parseBoundaryDefinition(definition, payload) {
+        definition = definition.trim();
+        let min = { value: undefined, desc: '' };
+        let max = { value: undefined, desc: '' };
+
+        // 1. Date Range: 30days to 50years
+        const dateMatch = definition.match(/^(\d+)(days|months|years)\s+to\s+(\d+)(days|months|years)$/i);
+        if (dateMatch) {
+            const today = new Date();
+            const format = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
+            
+            const calcDate = (num, unit) => {
+                let d = new Date();
+                unit = unit.toLowerCase();
+                if (unit === 'days') d.setDate(d.getDate() - num);
+                if (unit === 'months') d.setMonth(d.getMonth() - num);
+                if (unit === 'years') d.setFullYear(d.getFullYear() - num);
+                return d;
+            };
+            
+            // Note: min age = max date, max age = min date
+            min.value = format(calcDate(parseInt(dateMatch[3]), dateMatch[4]));
+            min.desc = `Max Age (${dateMatch[3]} ${dateMatch[4]} ago)`;
+            max.value = format(calcDate(parseInt(dateMatch[1]), dateMatch[2]));
+            max.desc = `Min Age (${dateMatch[1]} ${dateMatch[2]} ago)`;
+            return { min, max };
+        }
+
+        // 2. Numeric Range: 10 to 40
+        const rangeMatch = definition.match(/^(-?\d+\.?\d*)\s+to\s+(-?\d+\.?\d*)$/);
+        if (rangeMatch) {
+            min.value = parseFloat(rangeMatch[1]);
+            min.desc = `Value ${min.value}`;
+            max.value = parseFloat(rangeMatch[2]);
+            max.desc = `Value ${max.value}`;
+            return { min, max };
+        }
+
+        // 3. Discrete Values: 5, 6, 8, 10
+        const discreteMatch = definition.split(',').map(v => v.trim()).filter(Boolean);
+        if (discreteMatch.length > 1) {
+            const numericValues = discreteMatch.map(Number).filter(n => !isNaN(n)).sort((a,b) => a - b);
+            if (numericValues.length > 1) {
+                min.value = numericValues[0];
+                min.desc = `Value ${min.value}`;
+                max.value = numericValues[numericValues.length - 1];
+                max.desc = `Value ${max.value}`;
+            } else { // Handle string values if not numeric
+                discreteMatch.sort();
+                min.value = discreteMatch[0];
+                min.desc = `Value "${min.value}"`;
+                max.value = discreteMatch[discreteMatch.length - 1];
+                max.desc = `Value "${max.value}"`;
+            }
+            return { min, max };
+        }
+        
+        // 4. Dependent Field: PPT+deferment
+        const dependentMatch = definition.match(/^[a-zA-Z0-9_.]+(\s*[+\-*/]\s*[a-zA-Z0-9_.]+)+$/);
+        if(dependentMatch) {
+             try {
+                // Find all field paths in the expression
+                const fields = definition.match(/[a-zA-Z_][a-zA-Z0-9_.]*/g) || [];
+                let tempExpr = definition;
+                fields.forEach(field => {
+                    const val = getValueByPath(payload, field);
+                    if (typeof val !== 'number') throw new Error(`Field '${field}' is not a number.`);
+                    tempExpr = tempExpr.replace(new RegExp(field, 'g'), val);
+                });
+                const result = new Function(`return ${tempExpr}`)();
+                // For dependent, we only have one result, so we test it as both min and max
+                min.value = max.value = result;
+                min.desc = max.desc = `Calculated Value ${result} (from ${definition})`;
+             } catch(e) {
+                console.error("Dependent field calculation error:", e);
+             }
+             return {min, max};
+        }
+
+        return { min, max }; // Return empty if no match
+    }
+
+
+    // --- EVENT LISTENERS & INITIALIZATION ---
+    function updateAllButtonStates() {
+        const isTokenPresent = authTokenInput.value.trim() !== '';
+        const isPayloadPresent = payloadTextarea.value.trim() !== '';
+        const canRunTests = isTokenPresent && isPayloadPresent;
+
+        document.getElementById('test-base-payload-btn').disabled = !canRunTests;
+        document.getElementById('run-mandatory-test-btn').disabled = !canRunTests || document.querySelectorAll('.mandatory-checkbox:checked').length === 0;
+        document.getElementById('run-datatype-test-btn').disabled = !canRunTests || !Array.from(document.querySelectorAll('.datatype-select')).some(s => s.value !== 'NO_TEST');
+        document.getElementById('run-boundary-test-btn').disabled = !canRunTests || document.querySelectorAll('#boundary-fields-table tr').length === 0;
+        document.getElementById('run-lov-test-btn').disabled = !canRunTests || document.querySelectorAll('#lov-fields-table tr').length === 0;
+        document.getElementById('run-health-test-btn').disabled = !canRunTests;
+    }
+
+    function setupSearch(inputId, tableId) {
+        document.getElementById(inputId).addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll(`#${tableId} tr`).forEach(row => {
+                const fieldPath = row.querySelector('code')?.textContent.toLowerCase() || '';
+                row.style.display = fieldPath.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+    
+    // History Manager
+    function showHistory() {
+        const history = JSON.parse(localStorage.getItem('api_test_suite_history') || '[]');
+        historyList.innerHTML = '';
+        if (history.length === 0) {
+            historyList.innerHTML = '<li>No history found.</li>';
+        } else {
+            history.reverse().forEach(run => { // Show most recent first
+                const li = document.createElement('li');
+                li.style.cssText = 'border-bottom: 1px solid #eee;';
+                const link = document.createElement('a');
+                link.href = '#';
+                link.style.cssText = 'display: block; padding: 12px 5px; text-decoration: none; color: var(--primary-color);'
+                link.dataset.runId = run.id;
+                link.textContent = `${new Date(run.id).toLocaleString()} - ${run.title} (${run.results.length} tests)`;
+                link.onclick = (e) => {
+                    e.preventDefault();
+                    reportTitle.textContent = `Report for: ${run.title} (from History)`;
+                    populateReportTable(run.results);
+                    historyModal.style.display = 'none';
+                    reportCard.scrollIntoView({ behavior: 'smooth' });
+                };
+                li.appendChild(link);
+                historyList.appendChild(li);
+            });
+        }
+        historyModal.style.display = 'block';
+    }
+    historyBtn.onclick = showHistory;
+    historyCloseBtn.onclick = () => historyModal.style.display = 'none';
+    clearHistoryBtn.onclick = () => {
+        if (confirm('Are you sure you want to clear all test history? This cannot be undone.')) {
+            localStorage.removeItem('api_test_suite_history');
+            localStorage.removeItem('api_test_log');
+            historyList.innerHTML = '<li>History cleared.</li>';
+            showModal('History Cleared', 'All saved test runs and logs have been deleted.');
+        }
+    };
+    
+    // Report Table Delegated Click Handler
+    reportTableBody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('expand-btn')) {
+            const targetId = e.target.dataset.target;
+            const detailsRow = document.getElementById(targetId);
+            if (detailsRow) {
+                const isVisible = detailsRow.style.display !== 'none';
+                detailsRow.style.display = isVisible ? 'none' : '';
+                e.target.innerHTML = isVisible ? '+' : '−';
+            }
+        }
+        if (e.target.classList.contains('copy-btn')) {
+            const contentElement = e.target.closest('div').querySelector('.payload-viewer > code');
+            if (contentElement && navigator.clipboard) {
+                navigator.clipboard.writeText(contentElement.textContent).then(() => {
+                    const originalText = e.target.textContent;
+                    e.target.textContent = 'Copied!';
+                    setTimeout(() => { e.target.textContent = originalText; }, 2000);
+                }).catch(err => showModal('Copy Failed', 'Could not copy text to clipboard.'));
+            }
+        }
+    });
+    document.getElementById('report-select-all').addEventListener('change', (e) => {
+        document.querySelectorAll('.report-row-checkbox').forEach(cb => cb.checked = e.target.checked);
+    });
+
+    // --- Init Listeners ---
+    document.getElementById('test-base-payload-btn').addEventListener('click', runBasePayloadTest);
+    document.body.addEventListener('change', (e) => { if (e.target.matches('.mandatory-checkbox, .datatype-select')) { updateAllButtonStates(); } });
+    authTokenInput.addEventListener('input', updateAllButtonStates);
+    payloadTextarea.addEventListener('input', () => { populateAllFields(); document.getElementById('base-payload-status').textContent = ''; document.getElementById('boundary-fields-table').innerHTML = ''; document.getElementById('lov-fields-table').innerHTML = ''; updateAllButtonStates();});
+    document.getElementById('add-header-btn').addEventListener('click', () => addHeaderRow());
+    document.getElementById('run-mandatory-test-btn').addEventListener('click', () => runTest('mandatory'));
+    document.getElementById('run-datatype-test-btn').addEventListener('click', () => runTest('datatype'));
+    document.getElementById('run-boundary-test-btn').addEventListener('click', () => runTest('boundary'));
+    document.getElementById('run-lov-test-btn').addEventListener('click', () => runTest('lov'));
+    document.getElementById('run-health-test-btn').addEventListener('click', () => runTest('health'));
+    document.getElementById('add-boundary-field-btn').addEventListener('click', () => addDynamicRow('boundary'));
+    document.getElementById('add-lov-field-btn').addEventListener('click', () => addDynamicRow('lov'));
+    document.getElementById('select-all-btn').addEventListener('click', () => { document.querySelectorAll('#mandatory-fields-table tr:not([style*="display: none"]) .mandatory-checkbox').forEach(cb => cb.checked = true); updateAllButtonStates(); });
+    document.getElementById('deselect-all-btn').addEventListener('click', () => { document.querySelectorAll('#mandatory-fields-table tr:not([style*="display: none"]) .mandatory-checkbox').forEach(cb => cb.checked = false); updateAllButtonStates(); });
+    setupSearch('mandatory-field-search', 'mandatory-fields-table');
+    setupSearch('datatype-field-search', 'datatype-fields-table');
+
+    // --- Initial page setup ---
+    updateEndpoint();
+    for (const [key, value] of Object.entries(initialHeaders)) { addHeaderRow(key, value); }
+    populateAllFields();
+    updateAllButtonStates();
+    moveTabSlider(document.querySelector('.tab-button.active'));
+    window.addEventListener('resize', () => moveTabSlider(document.querySelector('.tab-button.active')));
+});
+</script>
+</body>
+</html>
