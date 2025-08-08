@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             } else if (activeApi === 'quote' && (jsonResponse.result || jsonResponse.payload)) {
                 actualCode = jsonResponse.result?.status || jsonResponse.payload?.quote?.[0]?.calculations?.[0]?.errorMessage?.code || actualStatus;
-                actualResponse = jsonResponse.result?.status || ''; // Simplified for quote
+                actualResponse = jsonResponse.payload.quote[0].calculations[0].errorMessage.message || jsonResponse.error.message || ""; // Simplified for quote
             
             } else {
                  // Generic fallback for unknown structures
@@ -1067,4 +1067,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body>
+
 </html>
